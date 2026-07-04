@@ -68,10 +68,9 @@ def main():
     answer, chunks, distances = generate_answer(query)
     print("\n--- Answer ---")
     print(answer)
-    print("\n--- Retrieved chunks ---")
-    for i, (chunk, dist) in enumerate(zip(chunks, distances)):
-        print(f"\nChunk {i+1} (distance {dist:.2f}):")
-        print(chunk[:200])
+    print("\n--- Sources used (top match distances) ---")
+    for i, dist in enumerate(distances):
+        print(f"  Chunk {i+1}: distance {dist:.2f}")
 
 if __name__ == "__main__":
     main()
