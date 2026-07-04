@@ -7,7 +7,7 @@ load_dotenv()
 
 LLM_PROVIDER = os.getenv("LLM_PROVIDER", "ollama")  # "ollama" or "groq"
 GEN_MODEL_OLLAMA = "llama3"
-GEN_MODEL_GROQ = "llama3-8b-8192"   # Groq's hosted Llama 3 8B — matches your local model size
+GEN_MODEL_GROQ = os.getenv("GROQ_MODEL", "openai/gpt-oss-20b")  # Groq's hosted Llama 3 8B — matches your local model size
 
 SYSTEM_PROMPT = """You are a helpful assistant that answers questions using ONLY the provided context.
 
