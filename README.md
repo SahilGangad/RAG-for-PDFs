@@ -48,8 +48,8 @@ streamlit run app.py
 ## Running with Docker
 
 ```bash
-docker build -t rag-doc-qa .
-docker run -p 8501:8501 --env-file .env rag-doc-qa
+docker build -t rag-for-pdfs .
+docker run -p 8501:8501 --env-file .env rag-for-pdfs
 ```
 
 ## Evaluation & known limitations
