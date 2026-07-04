@@ -1,12 +1,19 @@
 # ingest.py
-import ollama
 from pypdf import PdfReader
+from sentence_transformers import SentenceTransformer
 import chromadb
 
-PDF_PATH = "data/slregression.pdf"   # change to your actual filename
+PDF_PATH = "data/slregression.pdf"
 CHUNK_SIZE = 1000
 CHUNK_OVERLAP = 200
-EMBED_MODEL = "nomic-embed-text"
+EMBED_MODEL_NAME = "all-MiniLM-L6-v2"
+
+_model = None
+def get_embed_model():
+    global _model
+    if _model is None:
+        _model = SentenceTransformer(EMBED_MODEL_NAME)
+    return _model
 
 def load_pdf_text(path):
     reader = PdfReader(path)
@@ -25,13 +32,9 @@ def chunk_text(text, chunk_size=CHUNK_SIZE, overlap=CHUNK_OVERLAP):
     return chunks
 
 def embed_chunks(chunks):
-    embeddings = []
-    for i, chunk in enumerate(chunks):
-        response = ollama.embeddings(model=EMBED_MODEL, prompt=chunk)
-        embeddings.append(response["embedding"])
-        if (i + 1) % 10 == 0:
-            print(f"  embedded {i+1}/{len(chunks)}")
-    return embeddings
+    model = get_embed_model()
+    embeddings = model.encode(chunks, show_progress_bar=False)
+    return embeddings.tolist()   # sentence-transformers returns numpy arrays — ChromaDB wants plain lists
 
 def main():
     print("Loading PDF...")
@@ -42,19 +45,14 @@ def main():
     chunks = chunk_text(text)
     print(f"Created {len(chunks)} chunks")
 
-    print("Embedding chunks via Ollama (nomic-embed-text)...")
+    print("Embedding chunks (sentence-transformers)...")
     embeddings = embed_chunks(chunks)
 
     print("Storing in ChromaDB...")
     client = chromadb.PersistentClient(path="chroma_db")
     collection = client.get_or_create_collection(name="doc_chunks")
-
     ids = [f"chunk_{i}" for i in range(len(chunks))]
-    collection.add(
-        ids=ids,
-        embeddings=embeddings,   # already plain lists from ollama, no .tolist() needed
-        documents=chunks
-    )
+    collection.add(ids=ids, embeddings=embeddings, documents=chunks)
 
     print(f"Done. {collection.count()} chunks stored in chroma_db/")
 

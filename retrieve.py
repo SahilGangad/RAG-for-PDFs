@@ -1,15 +1,13 @@
 # retrieve.py
-import ollama
 import chromadb
+from ingest import get_embed_model
 
-EMBED_MODEL = "nomic-embed-text"
 TOP_K = 3
 DEFAULT_COLLECTION = "doc_chunks"
 
 def get_query_embedding(query):
-    prefixed = f"search_query: {query}"
-    response = ollama.embeddings(model=EMBED_MODEL, prompt=prefixed)
-    return response["embedding"]
+    model = get_embed_model()
+    return model.encode([query])[0].tolist()
 
 def retrieve(query, top_k=TOP_K, collection_name=DEFAULT_COLLECTION):
     client = chromadb.PersistentClient(path="chroma_db")
@@ -27,7 +25,6 @@ def retrieve(query, top_k=TOP_K, collection_name=DEFAULT_COLLECTION):
 def main():
     query = input("Ask a question about your document: ")
     chunks, distances = retrieve(query)
-
     print(f"\nTop {len(chunks)} matches:\n")
     for i, (chunk, dist) in enumerate(zip(chunks, distances)):
         print(f"--- Match {i+1} (distance: {dist:.4f}) ---")
